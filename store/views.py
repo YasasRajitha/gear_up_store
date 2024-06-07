@@ -38,12 +38,21 @@ class ProductViewSet(ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
     
-class CartViewSet(CreateModelMixin,
-                  GenericViewSet,
-                  RetrieveModelMixin,
-                  DestroyModelMixin):
-    queryset = Cart.objects.prefetch_related('items__product').all()
+class CartViewSet(ModelViewSet):
+    # queryset = Cart.objects.prefetch_related('items__product').all()
     serializer_class = CartSerializer
+
+    def get_queryset(self):
+        print(self.kwargs)
+
+        if self.request.user.is_staff:
+            return Cart.objects.prefetch_related('items__product').all()
+
+        return Cart.objects.filter(customer_id=self.kwargs['customer_pk'])
+    
+    def get_serializer_context(self):
+        print(self.kwargs)
+        return {'customerid' : self.kwargs['customer_pk']}
 
 class CartItemViewSet(ModelViewSet):
 
@@ -74,24 +83,24 @@ class CustomerViewSet(ModelViewSet):
             return Customer.objects.all()
         return Customer.objects.filter(user_id=self.request.user.id)
 
-    def get_serializer_context(self):
-        return {'user_id' : self.request.user.id}
+    # def get_serializer_context(self):
+    #     return {'user_id' : self.request.user.id}
 
-    @action(detail=True)
-    def history(self, request, pk):
-        return Response('ok')
+    # @action(detail=True)
+    # def history(self, request, pk):
+    #     return Response('ok')
 
-    @action(detail=False,methods=['GET','PUT'],permission_classes=[IsAuthenticated])
-    def me(self, request):
-        (customer,created) = Customer.objects.get_or_create(user_id=request.user.id)
-        if request.method == 'GET':
-            serializer = CustomerSerializer(customer)
-            return Response(serializer.data)
-        elif request.method == 'PUT':
-            serializer = CustomerSerializer(customer, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+    # @action(detail=False,methods=['GET','PUT'],permission_classes=[IsAuthenticated])
+    # def me(self, request):
+    #     (customer,created) = Customer.objects.get_or_create(user_id=request.user.id)
+    #     if request.method == 'GET':
+    #         serializer = CustomerSerializer(customer)
+    #         return Response(serializer.data)
+    #     elif request.method == 'PUT':
+    #         serializer = CustomerSerializer(customer, data=request.data)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data)
 
 
 class OrderViewSet(ModelViewSet):

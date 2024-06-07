@@ -69,15 +69,15 @@ class UpdateCartItemSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
 
-    user_id = serializers.IntegerField(read_only=True)
+    # user_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Customer
-        fields = ['id', 'user_id', 'phone', 'birth_date']
+        fields = ['id', 'user', 'phone', 'birth_date']
 
-    def create(self, validated_data):
-        user_id = self.context['user_id']
-        return Customer.objects.create(user_id=user_id,**validated_data)
+    # def create(self, validated_data):
+    #     user_id = self.context['user_id']
+    #     return Customer.objects.create(user_id=user_id,**validated_data)
 
 class OrderSerializer(serializers.ModelSerializer):
     placed_at = serializers.DateTimeField(read_only=True)
@@ -103,11 +103,11 @@ class CartSerializer(serializers.ModelSerializer):
     def get_total_price(self, cart:Cart):
         return sum([item.quantity * item.product.unit_price for item in cart.items.all()])
     
-    # def create(self, validated_data):
-    #     customer_id = self.context['customerid']
+    def create(self, validated_data):
+        customer_id = self.context['customerid']
 
-    #     return Cart.objects.create(customer_id=customer_id,**validated_data)
+        return Cart.objects.create(customer_id=customer_id,**validated_data)
     
     class Meta:
         model = Cart
-        fields = ['id','items','total_price']
+        fields = ['id','items','customer_id','total_price']
