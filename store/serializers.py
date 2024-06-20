@@ -15,23 +15,18 @@ class SimpleProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id','title','unit_price']
 
-    total_price = serializers.SerializerMethodField(method_name='get_total_price')
-
-    def get_total_price(self, cart_item:CartItem):
-        return cart_item.quantity * cart_item.product.unit_price
-
 class CartItemSerializer(serializers.ModelSerializer):
 
+    total_price = serializers.SerializerMethodField(method_name='get_total_price')
+    
+    def get_total_price(self, cart_item:CartItem):
+        return cart_item.quantity * cart_item.product.unit_price
+    
     product = SimpleProductSerializer()
 
     class Meta:
         model = CartItem
         fields = ['id','product','quantity','total_price']
-
-    total_price = serializers.SerializerMethodField(method_name='get_total_price')
-
-    def get_total_price(self, cart_item:CartItem):
-        return cart_item.quantity * cart_item.product.unit_price
 
     
 class AddCartItemSerializer(serializers.ModelSerializer):
@@ -70,7 +65,7 @@ class UpdateCartItemSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
 
     # user_id = serializers.IntegerField(read_only=True)
-
+    
     class Meta:
         model = Customer
         fields = ['id', 'user', 'phone', 'birth_date']
@@ -79,19 +74,6 @@ class CustomerSerializer(serializers.ModelSerializer):
     #     user_id = self.context['user_id']
     #     return Customer.objects.create(user_id=user_id,**validated_data)
 
-class OrderSerializer(serializers.ModelSerializer):
-    placed_at = serializers.DateTimeField(read_only=True)
-    customer_id = serializers.IntegerField(read_only=True)
-    items = CartItemSerializer(read_only=True,many=True)
-    
-    class Meta:
-        model = Order
-        fields = ['id','placed_at','payment_status','customer_id','items','delivery_address']
-
-    def create(self, validated_data):
-        customer_id = self.context['customer_id']
-
-        return Order.objects.create(customer_id=customer_id,**validated_data)
 
 class CartSerializer(serializers.ModelSerializer):
 
@@ -111,3 +93,30 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id','items','customer_id','total_price']
+        
+class OrderSerializer(serializers.ModelSerializer):
+    placed_at = serializers.DateTimeField(read_only=True)
+    customer_id = serializers.IntegerField(read_only=True)
+    items = serializers.SerializerMethodField(method_name='get_cart_items')
+
+    def get_cart_items(self,obj):
+        customer_id = obj.customer_id
+        cart_items = Cart.objects.filter(customer_id=customer_id)
+        # print(cart_items['id'])
+        # print(cart_items)
+
+        final_data = (CartSerializer(cart_items,many=True).data)[0]
+        del final_data['id']
+
+        return final_data
+    
+    class Meta:
+        model = Order
+        fields = ['id','placed_at','payment_status','customer_id','items','delivery_address']
+    
+
+
+    def create(self, validated_data):
+        customer_id = self.context['customer_id']
+
+        return Order.objects.create(customer_id=customer_id,**validated_data)

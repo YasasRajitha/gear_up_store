@@ -17,16 +17,16 @@ import os
 
 load_dotenv()
 
+CONTEXT_DICT = {}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-i!v$!m%w+*&^$-=ydn()==izntkc=z!@5t39qg3@@28bw4q*9p'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -73,7 +73,7 @@ ROOT_URLCONF = 'gear_up_store.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [ BASE_DIR / 'templates' ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -163,3 +163,12 @@ DJOSER = {
         'current_user' : 'core.serializers.UserSerializer'
     }
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PWD')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_DEFAULT_EMAIL')
+EMAIL_TIMEOUT = 120

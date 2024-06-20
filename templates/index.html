@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    
+        <h1>Gear Up Store</h1>
+    {% if Home %}
+        <p><a href="{% url 'login' %}">Login here</a></p>
+    {% endif %}
+    {% if not logged and not Home %}
+        <h2>Login</h2>
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username"><br>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password"><br>
+            <input type="submit" value="Login">
+        </form>
+        <p>{{ error }}</p>
+        <p>Don't have an account? <a href="{% url 'user_register' %}">Register here</a></p>
+    {% endif %}
+    
+</body>
+</html>

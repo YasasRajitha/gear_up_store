@@ -1,4 +1,9 @@
+from django.db.models.functions import Concat,Cast
+from django.db.models import Value,F
+from django.conf import settings
+from django.forms import CharField
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail,mail_admins,BadHeaderError
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -109,7 +114,31 @@ class OrderViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(customer_id=self.request.user.id)
-    
+        # cart_list = CartItem.objects.select_related('cart__customer').values
+        # cart_list_ann = cart_list.annotate(item_details = Concat(F('product'),Value('-'),F('product__title'),Value(' x '),Cast(F('quantity'),CharField()),output_field=CharField()))
+        # print(cart_list_ann)
+        # return Order.objects.select_related('customer__cart','customer__cart__items').values('id','delivery_address','payment_status','placed_at','customer_id','customer__cart').filter(customer_id=self.kwargs['nested_1_pk'])
+        return Order.objects.filter(customer_id=self.kwargs['nested_1_pk'])
+
     def get_serializer_context(self):
-        return {'customer_id' : self.request.user.id}
+        print(self.kwargs)
+        return {'customer_id' : self.kwargs['nested_1_pk']}
+
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+    
+        if response.status_code == status.HTTP_201_CREATED:
+            order = response.data
+            customer_email = request.user.email
+            subject = 'Order Confirmation'
+            message = f"Thanx for Ur order, {request.user.username}!\n\nOrder ID:{order['id']}\nPlaced at:{order['placed_at']}\nDelivery Address:{order['delivery_address']}\nItems:{order['items']}"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = [customer_email]
+
+            try:
+                send_mail(subject,message,from_email,recipient_list,fail_silently=False)
+            except BadHeaderError:
+                pass
+
+        return response
+    

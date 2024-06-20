@@ -16,14 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from . import views
 
 admin.site.site_header = 'Gear Up Store Admin'
 admin.site.index_title = 'Admin'
 
 urlpatterns = [
+    # path('', views.home,name='home'),
     path('admin/', admin.site.urls),
     path("__debug__/", include("debug_toolbar.urls")),
     path("store/", include("store.urls")),
+    path("core/",include("core.urls")),
     path("auth/", include('djoser.urls')),
     path("auth/", include('djoser.urls.jwt'))
 ]
