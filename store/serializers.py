@@ -79,7 +79,6 @@ class CartSerializer(serializers.ModelSerializer):
 
     id = serializers.UUIDField(read_only=True)
     items = CartItemSerializer(many=True,read_only=True)
-    # customer_id = serializers.IntegerField()
     total_price = serializers.SerializerMethodField(method_name='get_total_price')
 
     def get_total_price(self, cart:Cart):
